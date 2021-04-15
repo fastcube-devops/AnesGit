@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	 xmlns="http://www.tibco.com/schemas/Lab1/Schemas/Schema.xsd"
+	 targetNamespace="http://www.tibco.com/schemas/Lab1/Schemas/Schema.xsd"
+	 elementFormDefault="qualified"
+	 attributeFormDefault="unqualified">
+	<xs:element name="Clients">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="id_c"/>
+				<xs:element ref="fname_c"/>
+				<xs:element ref="lname_c"/>
+				<xs:element ref="add_date"/>
+				<xs:element ref="flag"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="id_c" type="xs:string"/>
+	<xs:element name="fname_c" type="xs:string"/>
+	<xs:element name="lname_c" type="xs:string"/>
+	<xs:element name="add_date" type="xs:string"/>
+	<xs:element name="flag" type="xs:string"/>
+</xs:schema>

@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pd:ProcessDefinition xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:pfx="http://www.tibco.com/schemas/Lab1/Schemas/Schema.xsd2" xmlns:pd="http://xmlns.tibco.com/bw/process/2003" xmlns:ns="http://www.tibco.com/schemas/Logging/Schemas/Schema.xsd" xmlns:ns2="http://www.tibco.com/pe/EngineTypes" xmlns:tib="http://www.tibco.com/bw/xslt/custom-functions" xmlns:ns1="http://www.tibco.com/namespaces/tnt/plugins/jms" xmlns:ns4="http://www.tibco.com/pe/DeployedVarsType" xmlns:ns3="http://www.tibco.com/namespaces/tnt/plugins/file">
+    <xs:import xmlns:xs="http://www.w3.org/2001/XMLSchema" namespace="http://www.tibco.com/schemas/Lab1/Schemas/Schema.xsd2" schemaLocation="/Schemas/schemaClient.xsd"/>
+    <pd:name>ProcessDefinitions/ExportCsv.process</pd:name>
+    <pd:startName>JMS Queue Receiver</pd:startName>
+    <pd:startX>0</pd:startX>
+    <pd:startY>0</pd:startY>
+    <pd:returnBindings/>
+    <pd:starter name="JMS Queue Receiver">
+        <pd:type>com.tibco.plugin.jms.JMSQueueEventSource</pd:type>
+        <pd:resourceType>ae.activities.JMSQueueEventSource</pd:resourceType>
+        <pd:x>115</pd:x>
+        <pd:y>72</pd:y>
+        <config>
+            <PermittedMessageType>Text</PermittedMessageType>
+            <SessionAttributes>
+                <transacted>false</transacted>
+                <acknowledgeMode>2</acknowledgeMode>
+                <maxSessions>1</maxSessions>
+                <destination>transportqueue</destination>
+            </SessionAttributes>
+            <ConfigurableHeaders>
+                <JMSDeliveryMode>PERSISTENT</JMSDeliveryMode>
+                <JMSExpiration>0</JMSExpiration>
+                <JMSPriority>4</JMSPriority>
+            </ConfigurableHeaders>
+            <ConnectionReference>/Connections/JMS Connection.sharedjmscon</ConnectionReference>
+        </config>
+        <pd:inputBindings/>
+    </pd:starter>
+    <pd:endName>End</pd:endName>
+    <pd:endX>952</pd:endX>
+    <pd:endY>208</pd:endY>
+    <pd:errorSchemas/>
+    <pd:processVariables/>
+    <pd:targetNamespace>http://xmlns.example.com/1618389348000</pd:targetNamespace>
+    <pd:activity name="JDBC Update">
+        <pd:type>com.tibco.plugin.jdbc.JDBCUpdateActivity</pd:type>
+        <pd:resourceType>ae.activities.JDBCUpdateActivity</pd:resourceType>
+        <pd:x>725</pd:x>
+        <pd:y>72</pd:y>
+        <config>
+            <timeout>10</timeout>
+            <commit>false</commit>
+            <emptyStrAsNil>false</emptyStrAsNil>
+            <statement>update clients set date_update = ?,  flag ='C' where id_client = ?</statement>
+            <jdbcSharedConfig>/Connections/DB_Connection.sharedjdbc</jdbcSharedConfig>
+            <Prepared_Param_DataType>
+                <parameter>
+                    <parameterName>update_date</parameterName>
+                    <dataType>VARCHAR</dataType>
+                </parameter>
+                <parameter>
+                    <parameterName>id_client</parameterName>
+                    <dataType>VARCHAR</dataType>
+                </parameter>
+            </Prepared_Param_DataType>
+        </config>
+        <pd:inputBindings>
+            <jdbcUpdateActivityInput>
+                <update_date>
+                    <xsl:value-of select="tib:timestamp()"/>
+                </update_date>
+                <id_client>
+                    <xsl:value-of select="$Parse-XML/pfx:infoClient/pfx:id_client"/>
+                </id_client>
+            </jdbcUpdateActivityInput>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="LogInitProcess">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>360</pd:x>
+        <pd:y>69</pd:y>
+        <config>
+            <processName>/ProcessDefinitions/LoggingProcess.process</processName>
+        </config>
+        <pd:inputBindings>
+            <ns:LogInfo>
+                <ns:idtech>
+                    <xsl:value-of select="concat(&quot;Labo&quot;,&quot;_&quot;,$_processContext/ns2:ProcessContext/ProcessId)"/>
+                </ns:idtech>
+                <ns:idfonc>
+                    <xsl:value-of select="concat($Parse-XML/pfx:infoClient/pfx:nom_client,&quot;_&quot;, $Parse-XML/pfx:infoClient/pfx:id_client)"/>
+                </ns:idfonc>
+                <ns:status>
+                    <xsl:value-of select="&quot;Init&quot;"/>
+                </ns:status>
+                <ns:logmessage>
+                    <xsl:value-of select="&quot;empty&quot;"/>
+                </ns:logmessage>
+            </ns:LogInfo>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="LogSucces">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>953</pd:x>
+        <pd:y>73</pd:y>
+        <config>
+            <processName>/ProcessDefinitions/LoggingProcess.process</processName>
+        </config>
+        <pd:inputBindings>
+            <ns:LogInfo>
+                <ns:idtech>
+                    <xsl:value-of select="concat(&quot;Labo&quot;,&quot;_&quot;,$_processContext/ns2:ProcessContext/ProcessId)"/>
+                </ns:idtech>
+                <ns:idfonc>
+                    <xsl:value-of select="concat($Parse-XML/pfx:infoClient/pfx:nom_client,&quot;_&quot;, $Parse-XML/pfx:infoClient/pfx:id_client)"/>
+                </ns:idfonc>
+                <ns:status>
+                    <xsl:value-of select="&quot;Succes&quot;"/>
+                </ns:status>
+                <ns:logmessage>
+                    <xsl:value-of select="&quot;client updated and csv created&quot;"/>
+                </ns:logmessage>
+            </ns:LogInfo>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="LogError">
+        <pd:type>com.tibco.pe.core.CallProcessActivity</pd:type>
+        <pd:resourceType>ae.process.subprocess</pd:resourceType>
+        <pd:x>590</pd:x>
+        <pd:y>260</pd:y>
+        <config>
+            <processName>/ProcessDefinitions/LoggingProcess.process</processName>
+        </config>
+        <pd:inputBindings>
+            <ns:LogInfo>
+                <ns:idtech>
+                    <xsl:value-of select="concat(&quot;Labo&quot;,&quot;_&quot;,$_processContext/ns2:ProcessContext/ProcessId)"/>
+                </ns:idtech>
+                <ns:idfonc>
+                    <xsl:value-of select="concat($Parse-XML/pfx:infoClient/pfx:nom_client,&quot;_&quot;, $Parse-XML/pfx:infoClient/pfx:id_client)"/>
+                </ns:idfonc>
+                <ns:status>
+                    <xsl:value-of select="&quot;Error&quot;"/>
+                </ns:status>
+                <ns:logmessage>
+                    <xsl:value-of select="concat(&quot;StrackTrace : &quot;,$_error/ns2:ErrorReport/StackTrace,&quot;ErrorMsg:&quot;, $_error/ns2:ErrorReport/Msg)"/>
+                </ns:logmessage>
+            </ns:LogInfo>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Confirm">
+        <pd:type>com.tibco.pe.core.ConfirmActivity</pd:type>
+        <pd:resourceType>activity.confirm</pd:resourceType>
+        <pd:x>855</pd:x>
+        <pd:y>71</pd:y>
+        <config>
+            <ConfirmEvent>JMS Queue Receiver</ConfirmEvent>
+        </config>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="Confirm-1">
+        <pd:type>com.tibco.pe.core.ConfirmActivity</pd:type>
+        <pd:resourceType>activity.confirm</pd:resourceType>
+        <pd:x>829</pd:x>
+        <pd:y>259</pd:y>
+        <config>
+            <ConfirmEvent>JMS Queue Receiver</ConfirmEvent>
+        </config>
+        <pd:inputBindings/>
+    </pd:activity>
+    <pd:activity name="Parse XML">
+        <pd:type>com.tibco.plugin.xml.XMLParseActivity</pd:type>
+        <pd:resourceType>ae.activities.XMLParseActivity</pd:resourceType>
+        <pd:x>244</pd:x>
+        <pd:y>70</pd:y>
+        <config>
+            <inputStyle>text</inputStyle>
+            <xsdVersion>default</xsdVersion>
+            <validateOutput>true</validateOutput>
+            <term ref="pfx:infoClient"/>
+        </config>
+        <pd:inputBindings>
+            <xmlString>
+                <xsl:value-of select="$JMS-Queue-Receiver/ns1:ActivityOutput/Body"/>
+            </xmlString>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Create File">
+        <pd:type>com.tibco.plugin.file.FileCreateActivity</pd:type>
+        <pd:resourceType>ae.activities.FileCreateActivity</pd:resourceType>
+        <pd:x>472</pd:x>
+        <pd:y>70</pd:y>
+        <config>
+            <createDirectory>false</createDirectory>
+            <createMissingDirectories>false</createMissingDirectories>
+            <overwrite>true</overwrite>
+        </config>
+        <pd:inputBindings>
+            <ns3:CreateActivityInputClass>
+                <fileName>
+                    <xsl:value-of select="concat($_globalVariables/ns4:GlobalVariables/CsvStock, upper-case($Parse-XML/pfx:infoClient/pfx:nom_client),&quot;_&quot;, $Parse-XML/pfx:infoClient/pfx:prenom,&quot;_&quot;,translate($Parse-XML/pfx:infoClient/pfx:date_ajout, &quot;-&quot;, &quot;&quot;),&quot;_&quot;,$Parse-XML/pfx:infoClient/pfx:id_client  ,&quot;.csv&quot;)"/>
+                </fileName>
+            </ns3:CreateActivityInputClass>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:activity name="Write File">
+        <pd:type>com.tibco.plugin.file.FileWriteActivity</pd:type>
+        <pd:resourceType>ae.activities.FileWriteActivity</pd:resourceType>
+        <pd:x>589</pd:x>
+        <pd:y>71</pd:y>
+        <config>
+            <encoding>text</encoding>
+            <compressFile>None</compressFile>
+        </config>
+        <pd:inputBindings>
+            <ns3:WriteActivityInputTextClass>
+                <fileName>
+                    <xsl:value-of select="$Create-File/ns3:CreateActivityOutputClass/fileInfo/fullName"/>
+                </fileName>
+                <textContent>
+                    <xsl:value-of select="concat($Parse-XML/pfx:infoClient/pfx:id_client,&quot;,&quot;, $Parse-XML/pfx:infoClient/pfx:nom_client,&quot;,&quot;,$Parse-XML/pfx:infoClient/pfx:prenom,&quot;,&quot;,$Parse-XML/pfx:infoClient/pfx:date_ajout,&quot;,&quot;,$Parse-XML/pfx:infoClient/pfx:flag,&quot;,&quot;,$Parse-XML/pfx:infoClient/pfx:date_update)"/>
+                </textContent>
+                <addLineSeparator>
+                    <xsl:value-of select="1"/>
+                </addLineSeparator>
+            </ns3:WriteActivityInputTextClass>
+        </pd:inputBindings>
+    </pd:activity>
+    <pd:transition>
+        <pd:from>JDBC Update</pd:from>
+        <pd:to>Confirm</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>LogSucces</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Confirm</pd:from>
+        <pd:to>LogSucces</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Confirm-1</pd:from>
+        <pd:to>End</pd:to>
+        <pd:lineType>Multiple Bends</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>JMS Queue Receiver</pd:from>
+        <pd:to>Parse XML</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Parse XML</pd:from>
+        <pd:to>LogInitProcess</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>LogError</pd:from>
+        <pd:to>Confirm-1</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Create File</pd:from>
+        <pd:to>Write File</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Write File</pd:from>
+        <pd:to>JDBC Update</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>Write File</pd:from>
+        <pd:to>LogError</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>error</pd:conditionType>
+    </pd:transition>
+    <pd:transition>
+        <pd:from>LogInitProcess</pd:from>
+        <pd:to>Create File</pd:to>
+        <pd:lineType>Default</pd:lineType>
+        <pd:lineColor>-16777216</pd:lineColor>
+        <pd:conditionType>always</pd:conditionType>
+    </pd:transition>
+</pd:ProcessDefinition>
